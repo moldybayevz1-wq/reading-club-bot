@@ -9,6 +9,7 @@ Reading Club — English level test bot (Kazakh interface)
 """
 import asyncio
 import csv
+import html
 import logging
 import os
 import random
@@ -179,12 +180,12 @@ async def send_question(message, context: ContextTypes.DEFAULT_TYPE, edit: bool 
     ]
     rows.append([InlineKeyboardButton("🤷 Білмеймін", callback_data=f"a:{idx}:-1")])
 
-    body = f"*Сұрақ {idx + 1}/{len(QUESTIONS)}*\n\n{text}"
+    body = f"<b>Сұрақ {idx + 1}/{len(QUESTIONS)}</b>\n\n{html.escape(text)}"
     markup = InlineKeyboardMarkup(rows)
     if edit:
-        await message.edit_text(body, reply_markup=markup, parse_mode="Markdown")
+        await message.edit_text(body, reply_markup=markup, parse_mode="HTML")
     else:
-        await message.reply_text(body, reply_markup=markup, parse_mode="Markdown")
+        await message.reply_text(body, reply_markup=markup, parse_mode="HTML")
 
 
 async def answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -222,21 +223,21 @@ async def finish(q, update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     )
     await q.message.edit_text(
-        f"🎉 *Тест аяқталды, {ud['name']}!*\n\n"
-        f"Нәтиже: *{score}/{len(QUESTIONS)}*\n"
-        f"Сенің деңгейің: *{level}* ({cefr})\n\n"
+        f"🎉 <b>Тест аяқталды, {html.escape(ud['name'])}!</b>\n\n"
+        f"Нәтиже: <b>{score}/{len(QUESTIONS)}</b>\n"
+        f"Сенің деңгейің: <b>{level}</b> ({cefr})\n\n"
         f"{desc}\n\n"
         "━━━━━━━━━━━━\n"
-        "📖 *Reading Club*\n"
+        "📖 <b>Reading Club</b>\n"
         "• 4 апта · 12 кездесу\n"
         "• Аптасына 2 рет — Book Discussion\n"
         "• Аптасына 1 рет — Weekly Recap\n"
         "• Vocabulary Quiz, Kahoot, mini-prizes\n"
         "• English-speaking community\n\n"
-        f"💰 Қатысу құны: *{PRICE}*\n"
+        f"💰 Қатысу құны: <b>{PRICE}</b>\n"
         f"📞 Жекеге жазыңыз немесе WhatsApp: {PHONE}",
         reply_markup=kb,
-        parse_mode="Markdown",
+        parse_mode="HTML",
     )
 
     save_result(user, ud["name"], score, level)
