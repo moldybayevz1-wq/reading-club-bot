@@ -7,11 +7,14 @@ Reading Club — English level test bot (Kazakh interface)
     export ADMIN_CHAT_ID="ваш Telegram ID"   # необязательно: сюда придут результаты
     python bot.py
 """
+import asyncio
 import csv
 import logging
 import os
 import random
+import threading
 from datetime import datetime
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -263,7 +266,30 @@ def save_result(user, name, score, level):
         )
 
 
+class _Ping(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+
+    def log_message(self, *args):
+        pass
+
+
+def start_ping_server():
+    """Мини-сервер для бесплатных хостингов (Render): внешний пинг не даёт боту уснуть."""
+    port = int(os.environ.get("PORT", "10000"))
+    server = HTTPServer(("0.0.0.0", port), _Ping)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+
+
 def main():
+    start_ping_server()
+    asyncio.set_event_loop(asyncio.new_event_loop())  # нужно для Python 3.14+
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(begin, pattern="^begin$"))
